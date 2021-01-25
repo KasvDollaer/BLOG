@@ -41,6 +41,8 @@ def post_detail(request, year, month, day, post):
     comments = post.comments.filter(active=True)
 
     new_comment = None
+    post_tags_ids = post.tags.values_list('id', flat=True)
+    similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
 
     if request.method == 'POST':
         #a comment was posted
@@ -55,9 +57,9 @@ def post_detail(request, year, month, day, post):
     else:
         comment_form = CommentForm()
         #List of similar posts
-        post_tags_ids = post.tags.values_list('id', flat=True)
-        similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
-        similar_posts = similar_posts.annotate(same_tags=Count('tags')).order_by('-same_tags','-publish')[:4]
+
+
+        similar_posts = similar_posts.annotate(same_tags=Count('tags')).order_by('-same_tags', '-publish')[:4]
     return render(request, 'blog/post/detail.html', {'post': post, 'comments': comments, 'new_comment': new_comment, 'comment_form':comment_form, 'similar_posts': similar_posts})
 
 def post_share(request, post_id):
