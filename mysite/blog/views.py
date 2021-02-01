@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # from django.views.generic import ListView
 from .models import Post, Comment
+from django.contrib.postgres.search import SearchVector
 from .forms import EmailPostForm, CommentForm
 from django.core.mail import send_mail
 from taggit.models import Tag
@@ -43,7 +44,8 @@ def post_detail(request, year, month, day, post):
     new_comment = None
     post_tags_ids = post.tags.values_list('id', flat=True)
     similar_posts = Post.published.filter(tags__in=post_tags_ids).exclude(id=post.id)
-
+    search_word = Post.objects.filter(body__search='django') # searches for django in body
+    mutiple_vector_search = Post.objects.annotate(search=SearchVector('title', 'body'),).filter(search='django') #search body and title
     if request.method == 'POST':
         #a comment was posted
         comment_form = CommentForm(data=request.POST)
